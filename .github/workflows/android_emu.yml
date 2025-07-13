@@ -17,13 +17,13 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - name: set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Start emulator
+        uses: ReactiveCircus/android-emulator-runner@v2
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          script: ./gradlew connectedDebugAndroidTest
 
       - name: Run UI Tests
         run: ./gradlew connectedDebugAndroidTest --info
