@@ -30,11 +30,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Install SDK Tools
-        run: |
-          sdkmanager --list
-          yes | sdkmanager --licenses
-
       - name: List available AVD devices
         run: |
           $ANDROID_HOME/tools/bin/avdmanager list device      
