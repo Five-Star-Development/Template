@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -16,29 +17,30 @@ fun ExampleRoot(viewModel: ExampleViewModel, modifier: Modifier) {
     val state = viewModel.state.collectAsStateWithLifecycle()
 
     ExampleScreen(
-        state = state.value,
-        onAction = viewModel::onAction,
-        modifier = modifier
+        state = state.value, onAction = viewModel::onAction, modifier = modifier
     )
 
 }
 
 @Composable
 fun ExampleScreen(
-    state: ExampleState,
-    onAction: (ExampleAction) -> Unit,
-    modifier: Modifier = Modifier
+    state: ExampleState, onAction: (ExampleAction) -> Unit, modifier: Modifier = Modifier
 ) {
 
     Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = { onAction(ExampleAction.OnButtonClicked) }) {
+        Button(
+            onClick = { onAction(ExampleAction.OnButtonClicked) },
+            modifier = modifier.testTag("ClickMeButton")
+        ) {
             Text(text = "Click Me")
         }
 
-        Text(text = state.greeting)
+        Text(
+            text = state.greeting,
+            modifier = modifier.testTag("greetingText")
+        )
     }
 }
 
