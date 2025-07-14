@@ -14,7 +14,7 @@ concurrency:
 jobs:
 
   list-avds:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Show AVD Devices
@@ -23,7 +23,7 @@ jobs:
           ${ANDROID_HOME}/cmdline-tools/latest/bin/avdmanager list device || echo "avdmanager not found or missing JAXB"
 
   instrumented-tests:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -42,8 +42,8 @@ jobs:
         with:
           api-level: 33
           target: google_apis
-          arch: arm64-v8a
-          profile: pixel_4
-          emulator-options: -no-window -no-audio -no-snapshot -accel hvf -gpu host
+          arch: x86_64
+          profile: Nexus 6
+          emulator-options: -no-window -no-audio -no-snapshot
           disable-animations: true
           script: ./gradlew connectedDebugAndroidTest
