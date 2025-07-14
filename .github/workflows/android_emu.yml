@@ -55,4 +55,4 @@ jobs:
           profile: Nexus 6
           emulator-options: -no-window -no-audio -no-snapshot
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest
+          script: ./gradlew connectedDebugAndroidTest --info
