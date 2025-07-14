@@ -35,7 +35,16 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-
+      - name: Ensure KVM permissions for current user
+        run: |
+          echo "Ensuring KVM permissions for user: $(whoami)"
+          # Füge den aktuellen Benutzer zur kvm-Gruppe hinzu
+          sudo gpasswd -a $(whoami) kvm
+          # Überprüfe, ob die Gruppe dem Benutzer zugewiesen wurde
+          groups $(whoami)
+          # Stelle sicher, dass die KVM-Gerätedatei für die Gruppe les- und schreibbar ist
+          sudo chmod 0666 /dev/kvm || true # `|| true` um Fehler zu ignorieren, falls /dev/kvm noch nicht existiert oder Berechtigungsprobleme
+          echo "KVM setup attempt completed."
 
       - name: Run Instrumented Tests on Emulator
         uses: ReactiveCircus/android-emulator-runner@v2
