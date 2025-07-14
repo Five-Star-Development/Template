@@ -1,48 +1,73 @@
-name: Firebase Test Lab
+name: Android CI with Firebase Test Lab
 
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  firebase-test-lab:
 
+jobs:
+  build_and_test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - name: set up JDK 17
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
+          distribution: 'temurin' # Oder eine andere Java-Distribution
+          java-version: '17' # Die von Ihrem Android-Projekt benötigte Java-Version
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Grant execute permissions to gradlew
+        run: chmod +x gradlew
 
-      - name: Decrypt Google Cloud key
-        run: printf '%s' "${{ secrets.GCLOUD_KEY }}" > gcloud-key.json
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
 
-      - name: Auth with Google Cloud
+      - name: Build Debug Android Test APK
+        run: ./gradlew assembleDebugAndroidTest
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+
+          service_account_key_file: ${{ secrets.GCLOUD_KEY }}
+          project_id: templateproject-14cb6
+
+      - name: Run Firebase Test Lab tests
         run: |
-          gcloud auth activate-service-account --key-file=gcloud-key.json
-          gcloud config set project templateproject-14cb6
+          # Ersetzen Sie "your-app-debug.apk" und "your-app-debug-androidTest.apk"
+          # durch die tatsächlichen Pfade zu Ihren APK-Dateien.
+          # Diese Pfade sind relativ zum Root-Verzeichnis Ihres Repositories.
+          
+          # Beispiel für ein Robo-Test auf einem generischen Gerät:
+          # gcloud firebase test android run \
+          #   --type robo \
+          #   --app app/build/outputs/apk/debug/app-debug.apk \
+          #   --device model=Pixel2,version=29,locale=en,orientation=portrait
 
-      - name: Build Debug APK & Test APK
-        run: ./gradlew assembleDebug assembleAndroidTest
-
-      - name: Run Tests in Firebase Test Lab
-        run: |
           gcloud firebase test android run \
             --type instrumentation \
             --app app/build/outputs/apk/debug/app-debug.apk \
             --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
-            --device model=Pixel4,version=34,locale=en,orientation=portrait
+            --device model=Pixel2,version=29,locale=en,orientation=portrait \
+            --timeout 5m # Optional: Erhöhen Sie das Timeout für längere Tests
+
+      - name: Download test results
+        if: always() # Auch wenn der Test fehlschlägt, versuchen die Ergebnisse herunterzuladen
+        run: |
+          gsutil cp -r "gs://Ihr-Google-Cloud-Projekt-ID.appspot.com/test_results/*" ./test_results_download/
+
+      - name: Upload test results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./test_results_download/
+          retention-days: 5
