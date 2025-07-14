@@ -1,0 +1,48 @@
+name: Firebase Test Lab
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  firebase-test-lab:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Decrypt Google Cloud key
+        run: echo "${{ secrets.GCLOUD_KEY }}" > "${{ github.workspace }}/gcloud-key.json"
+
+      - name: Auth with Google Cloud
+        run: |
+          gcloud auth activate-service-account --key-file=gcloud-key.json
+          gcloud config set project templateproject-14cb6
+
+      - name: Build Debug APK & Test APK
+        run: ./gradlew assembleDebug assembleAndroidTest
+
+      - name: Run Tests in Firebase Test Lab
+        run: |
+          gcloud firebase test android run \
+            --type instrumentation \
+            --app app/build/outputs/apk/debug/app-debug.apk \
+            --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+            --device model=Pixel4,version=34,locale=en,orientation=portrait
