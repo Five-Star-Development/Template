@@ -28,6 +28,12 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Write service account key
+        run: echo '${{ secrets.GCLOUD_KEY }}' > gcloud-key.json
+
+      - name: Check content of service account key file
+        run: cat gcloud-key.json
+
       - name: Decrypt Google Cloud key
         run: echo "${{ secrets.GCLOUD_KEY }}" > "${{ github.workspace }}/gcloud-key.json"
 
