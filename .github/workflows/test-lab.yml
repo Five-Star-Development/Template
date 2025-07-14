@@ -29,7 +29,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Decrypt Google Cloud key
-        run: echo "${{ secrets.GCLOUD_KEY }}" > "${{ github.workspace }}/gcloud-key.json"
+        run: printf '%s' "${{ secrets.GCLOUD_KEY }}" > gcloud-key.json
 
       - name: Auth with Google Cloud
         run: |
