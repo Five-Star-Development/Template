@@ -1,30 +1,19 @@
-name: Android Instrumented Tests
+name: Android CI Instrumented Tests
 
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-
 jobs:
-
-  list-avds:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Show AVD Devices
-        run: |
-          echo "Try avdmanager:"
-          ${ANDROID_HOME}/cmdline-tools/latest/bin/avdmanager list device || echo "avdmanager not found or missing JAXB"
-
   instrumented-tests:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,16 +24,55 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Ensure KVM permissions for current user
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.android/sdk
+            ~/.android/avd
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
+
+      - name: Enable KVM group permissions
         run: |
-          echo "Ensuring KVM permissions for user: $(whoami)"
-          # Füge den aktuellen Benutzer zur kvm-Gruppe hinzu
-          sudo gpasswd -a $(whoami) kvm
-          # Überprüfe, ob die Gruppe dem Benutzer zugewiesen wurde
-          groups $(whoami)
-          # Stelle sicher, dass die KVM-Gerätedatei für die Gruppe les- und schreibbar ist
-          sudo chmod 0666 /dev/kvm || true # `|| true` um Fehler zu ignorieren, falls /dev/kvm noch nicht existiert oder Berechtigungsprobleme
-          echo "KVM setup attempt completed."
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm    
+
+      # AVD Cache für bessere Performance
+      - name: Cache AVD
+        uses: actions/cache@v3
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ runner.os }}-33-google_apis-x86_64
+
+      # AVD erstellen wenn nicht gecacht
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          emulator-options: -no-window -no-audio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: echo "Generated AVD snapshot for caching."
 
       - name: Run Instrumented Tests on Emulator
         uses: ReactiveCircus/android-emulator-runner@v2
@@ -53,6 +81,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: Nexus 6
-          emulator-options: -no-window -no-audio -no-snapshot
+          force-avd-creation: false
+          emulator-options: -no-window -no-audio -no-boot-anim -camera-back none -no-snapshot-save
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest --info
+          script: ./gradlew connectedDebugAndroidTest --info --parallel
