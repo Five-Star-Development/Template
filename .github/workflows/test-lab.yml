@@ -12,55 +12,24 @@ concurrency:
 
 
 jobs:
-  build_and_test:
+  firebase-test-lab:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java
+      - uses: actions/checkout@v1
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: 17
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+      - name: build release
+        run: ./gradlew assembleRelease
 
-      - name: Build Debug Android Test APK
-        run: ./gradlew assembleDebugAndroidTest
-
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
+      - name: upload artifact to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
-          service_account_key_file: ${{ secrets.GCLOUD_KEY }}
-          project_id: 1:457277055176:android:caaa23996f71d2c5fb45fd
-
-      - name: Run Firebase Test Lab tests
-        run: |
-          
-          # Beispiel für ein Robo-Test auf einem generischen Gerät:
-          # gcloud firebase test android run \
-          #   --type robo \
-          #   --app app/build/outputs/apk/debug/app-debug.apk \
-          #   --device model=Pixel2,version=29,locale=en,orientation=portrait
-
-          gcloud firebase test android run \
-            --type instrumentation \
-            --app app/build/outputs/apk/debug/app-debug.apk \
-            --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
-            --device model=Pixel2,version=29,locale=en,orientation=portrait \
-            --timeout 5m # Optional: Erhöhen Sie das Timeout für längere Tests
-
-      - name: Download test results
-        if: always()
-        run: |
-          gsutil cp -r "gs://1:457277055176:android:caaa23996f71d2c5fb45fd.com/test_results/*" ./test_results_download/
-
-      - name: Upload test results as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: ./test_results_download/
-          retention-days: 5
+          appId: ${{secrets.FIREBASE_APP_ID}}
+          serviceCredentialsFileContent: ${{ secrets.GCLOUD_KEY }}
+          groups: testers
+          file: app/build/outputs/apk/release/app-release-unsigned.apk
