@@ -24,14 +24,31 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.android/sdk
+            ~/.android/avd
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
+
       - name: Ensure KVM permissions for current user
         run: |
           echo "Ensuring KVM permissions for user: $(whoami)"
-          # Füge den aktuellen Benutzer zur kvm-Gruppe hinzu
           sudo gpasswd -a $(whoami) kvm
-          # Überprüfe, ob die Gruppe dem Benutzer zugewiesen wurde
           groups $(whoami)
-          # Stelle sicher, dass die KVM-Gerätedatei für die Gruppe les- und schreibbar ist
           sudo chmod 0666 /dev/kvm || true # `|| true` um Fehler zu ignorieren, falls /dev/kvm noch nicht existiert oder Berechtigungsprobleme
           echo "KVM setup attempt completed."
 
