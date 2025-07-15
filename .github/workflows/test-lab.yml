@@ -34,9 +34,8 @@ jobs:
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
-
           service_account_key_file: ${{ secrets.GCLOUD_KEY }}
-          project_id: templateproject-14cb6
+          project_id: 1:457277055176:android:caaa23996f71d2c5fb45fd
 
       - name: Run Firebase Test Lab tests
         run: |
@@ -57,7 +56,7 @@ jobs:
       - name: Download test results
         if: always()
         run: |
-          gsutil cp -r "gs://templateproject-14cb6.com/test_results/*" ./test_results_download/
+          gsutil cp -r "gs://1:457277055176:android:caaa23996f71d2c5fb45fd.com/test_results/*" ./test_results_download/
 
       - name: Upload test results as artifact
         uses: actions/upload-artifact@v4
