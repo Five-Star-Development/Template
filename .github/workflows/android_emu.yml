@@ -11,21 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-
 jobs:
-
-  list-avds:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Show AVD Devices
-        run: |
-          echo "Try avdmanager:"
-          ${ANDROID_HOME}/cmdline-tools/latest/bin/avdmanager list device || echo "avdmanager not found or missing JAXB"
-
   instrumented-tests:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4

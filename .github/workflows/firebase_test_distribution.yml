@@ -1,4 +1,4 @@
-name: Android Instrumented Tests
+name: App Distribution
 
 on:
   workflow_dispatch:
