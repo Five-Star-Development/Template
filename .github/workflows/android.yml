@@ -22,7 +22,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
-        
+
     - name: Run Lint
       run: ./gradlew lint
 
