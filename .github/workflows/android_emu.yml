@@ -52,6 +52,30 @@ jobs:
           sudo chmod 0666 /dev/kvm || true # `|| true` um Fehler zu ignorieren, falls /dev/kvm noch nicht existiert oder Berechtigungsprobleme
           echo "KVM setup attempt completed."
 
+      # AVD Cache für bessere Performance
+      - name: Cache AVD
+        uses: actions/cache@v3
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ runner.os }}-33-google_apis-x86_64
+
+      # AVD erstellen wenn nicht gecacht
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          emulator-options: -no-window -no-audio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: echo "Generated AVD snapshot for caching."
+
       - name: Run Instrumented Tests on Emulator
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
