@@ -78,9 +78,9 @@ jobs:
 #          gsutil -m cp -r gs://${{ secrets.FIREBASE_TEST_RESULTS_BUCKET }}/test-results-* test-results/ || echo "No test results to download"
 #
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: firebase-test-results
-          path: test-results/
+#      - name: Upload test results
+#        uses: actions/upload-artifact@v4
+#        if: always()
+#        with:
+#          name: firebase-test-results
+#          path: test-results/
