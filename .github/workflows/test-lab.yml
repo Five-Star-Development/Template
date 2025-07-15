@@ -66,10 +66,6 @@ jobs:
             --device model=Pixel4,version=30,locale=de,orientation=portrait \
             --device model=Pixel6,version=31,locale=de,orientation=portrait \
             --timeout 5m \
-#            --results-bucket ${{ secrets.FIREBASE_TEST_RESULTS_BUCKET }} \
-#            --results-dir "test-results-$(date +%Y%m%d-%H%M%S)" \
-#            --environment-variables coverage=true,coverageFile="/sdcard/coverage.ec" \
-#            --directories-to-pull /sdcard \
             --format=json \
             --verbosity=info
 
