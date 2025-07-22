@@ -1,4 +1,4 @@
-name: App Distribution
+name: Firebase App Distribution
 
 on:
   workflow_dispatch:
