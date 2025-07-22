@@ -34,15 +34,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Cache Android SDK
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.android/sdk
-            ~/.android/avd
-          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-android-sdk-
+#      - name: Setup Gradle
+#        uses: gradle/actions/setup-gradle@v4
 
       - name: Enable KVM group permissions
         run: |
